@@ -7,19 +7,64 @@
     }
 </style>
 <script type="text/javascript" charset="utf-8">
+    var selectedAddress = null;
+
     function onTableLoaded() {
         $('#aps_ph').removeClass('loading');
         $('.progress').progress();
         $('#refresh').removeClass('disabled');
+        $('.connect').click(function() {
+            preparePwRequestor();
+            $('#ssid_ph').html($(this).data('ssid'));
+            selectedAddress = $(this).data('address');
+            $('#pwrequest').modal('show');
+        });
     }
+
     function doRefresh() {
         $('#refresh').addClass('disabled');
         $('#aps_ph').addClass('loading');
         $('#aps_ph').load('/scan', onTableLoaded);
     }
+
+    function validatePsk() {
+        if ($('#psk').val().length < 8) {
+            $('#submit_psk').addClass('disabled');
+            // $('#psk').parent().addClass('error');
+        } else {
+            $('#submit_psk').removeClass('disabled');
+            // $('#psk').parent().removeClass('error');
+        }
+    }
+
+    function preparePwRequestor() {
+        selectedAddress = null;
+        $('#psk').val('');
+        $('#submit_psk').addClass('disabled')
+                .removeClass('loading');
+    }
+
+    function onConnectCb(data) {
+        console.log(data);
+        $('#pwrequest').modal('hide');
+    }
+
+    function onPwRequestorApproved() {
+        var psk = $('#psk').val();
+        console.log('Connecting to: ' + selectedAddress + ' psk: ' + psk);
+        $.post('/connect', {address: selectedAddress, psk: psk}, onConnectCb);
+        $('#submit_psk').addClass('disabled');
+        $('#submit_psk').addClass('loading');
+
+        return false;
+    }
+
     $( document ).ready(function() {
         $('#refresh').click(doRefresh);
         doRefresh();
+        $('#pwrequest').modal({onApprove: onPwRequestorApproved})
+                .modal('setting', 'closable', false);
+        $('#psk').on('change keypress paste textInput input', validatePsk);
     });
 </script>
 
@@ -29,6 +74,37 @@
     <div class="ui icon button" id="refresh"><i class="refresh icon"></i> Refresh</div>
 
     <div id="aps_ph" class="ui segment">
+    </div>
+</div>
+
+
+<!-- Modal password request -->
+<div class="ui modal" id="pwrequest">
+    <div class="header">
+        Authenticate wireless connection
+    </div>
+    <div class="content">
+        <h3>Connecting to <span class="ui teal horizontal label" id="ssid_ph"></span></h3>
+
+        <div class="description">
+            <div class="ui header">A password is required for this connection</div>
+            <p>
+                <div class="ui left icon input">
+                    <input placeholder="Password" type="password" id="psk">
+                    <i class="lock icon"></i>
+                </div>
+            </p>
+        </div>
+    </div>
+
+    <div class="actions">
+        <div class="ui black button">
+            Cancel
+        </div>
+        <div class="ui disabled positive right labeled icon button" id="submit_psk">
+            Proceed
+            <i class="checkmark icon"></i>
+        </div>
     </div>
 </div>
 {% endblock %}

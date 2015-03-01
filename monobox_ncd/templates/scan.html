@@ -34,7 +34,9 @@
                 {% if ap.connected %}
                     <i class="checkmark icon"></i>
                 {% else %}
-                    <div class="ui icon button"><i class="wifi icon"></i></div>
+                    <div class="ui icon button connect"
+                        data-address="{{ ap.address }}"
+                        data-ssid="{{ ap.ssid }}"><i class="wifi icon"></i></div>
                 {% endif %}
                 </td>
                 <td class="ssid">{{ ap.ssid }}</td>

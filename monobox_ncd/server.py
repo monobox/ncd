@@ -34,6 +34,13 @@ def scan():
 
     return render_template('scan.html', aps=aps)
 
+@app.route('/connect', methods=['POST'])
+def connect():
+    print request.form
+    import time
+    time.sleep(5)
+    return 'DONE'
+
 @app.route("/")
 def main():
     # intf = netconf.Interface('wlan0')
