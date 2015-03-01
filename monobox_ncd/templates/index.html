@@ -1,6 +1,34 @@
 {% extends "base.html" %}
-{% block title %}Monobox Network Configuration{% endblock %}
 
 {% block content %}
-HULLO
+<style type="text/css" media="screen">
+    #aps_ph {
+        height: 100%;
+    }
+</style>
+<script type="text/javascript" charset="utf-8">
+    function onTableLoaded() {
+        $('#aps_ph').removeClass('loading');
+        $('.progress').progress();
+        $('#refresh').removeClass('disabled');
+    }
+    function doRefresh() {
+        $('#refresh').addClass('disabled');
+        $('#aps_ph').addClass('loading');
+        $('#aps_ph').load('/scan', onTableLoaded);
+    }
+    $( document ).ready(function() {
+        $('#refresh').click(doRefresh);
+        doRefresh();
+    });
+</script>
+
+<div class="ui raised segment">
+    <h3 class="ui inverted blue block header">Available wireless networks</h3>
+
+    <div class="ui icon button" id="refresh"><i class="refresh icon"></i> Refresh</div>
+
+    <div id="aps_ph" class="ui segment">
+    </div>
+</div>
 {% endblock %}

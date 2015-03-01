@@ -1,11 +1,3 @@
-{% extends "base.html" %}
-{% block title %}Monobox Network Configuration{% endblock %}
-
-{% block head %}
-{{ super() }}
-<script src="{{ url_for('static', filename='js/spin.min.js') }}" type="text/javascript" charset="utf-8"></script>
-<script src="{{ url_for('static', filename='js/jquery.spin.js') }}" type="text/javascript" charset="utf-8"></script>
-
 <style type="text/css" media="screen">
     #aps tr.connected {
         background-color: #eee;
@@ -23,60 +15,42 @@
         width: 200px;
     }
 </style>
-{% endblock %}
 
-{% block content %}
-<script type="text/javascript" charset="utf-8">
-    $( document ).ready(function() {
-        $('.progress').progress();
-        $('#refresh').click(function() {
-            $('#aps').toggleClass('loading');
-        });
-    });
-</script>
-
-<div class="ui raised segment">
-    <h3 class="ui inverted blue block header">Available wireless networks</h3>
-
-    <div class="ui icon button" id="refresh"><i class="refresh icon"></i> Refresh</div>
-
-    <div class="ui segment" id="aps">
-        <table>
-            <thead>
-                <tr>
-                    <th>Connect</th>
-                    <th>SSID</th>
-                    <th>Signal</th>
-                    <th>Channel</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for ap in aps %}
-                <tr {% if ap.connected %}class="connected"{% endif %}>
-                    <td>
-                    {% if ap.connected %}
-                        <i class="checkmark icon"></i>
-                    {% else %}
-                        <div class="ui icon button"><i class="wifi icon"></i></div>
-                    {% endif %}
-                    </td>
-                    <td class="ssid">{{ ap.ssid }}</td>
-                    <td>
-                        <div class="ui small indicating progress" data-percent="{{ ap.signal_strength }}">
-                            <div class="bar"></div>
-                        </div>
-                    </td>
-                    <td align="center">{{ ap.channel }}</td>
-                    <td>
-                    {% if not ap.open %}
-                        <i class="lock icon"></i>
-                    {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div id="aps">
+    <table>
+        <thead>
+            <tr>
+                <th>Connect</th>
+                <th>SSID</th>
+                <th>Signal</th>
+                <th>Channel</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ap in aps %}
+            <tr {% if ap.connected %}class="connected"{% endif %}>
+                <td>
+                {% if ap.connected %}
+                    <i class="checkmark icon"></i>
+                {% else %}
+                    <div class="ui icon button"><i class="wifi icon"></i></div>
+                {% endif %}
+                </td>
+                <td class="ssid">{{ ap.ssid }}</td>
+                <td>
+                    <div class="ui small indicating progress" data-percent="{{ ap.signal_strength }}">
+                        <div class="bar"></div>
+                    </div>
+                </td>
+                <td align="center">{{ ap.channel }}</td>
+                <td>
+                {% if not ap.open %}
+                    <i class="lock icon"></i>
+                {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-{% endblock %}
