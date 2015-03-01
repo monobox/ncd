@@ -42,7 +42,7 @@ def _invoke(command):
 
 
 class WifiAccessPoint(object):
-    FIELDS = ('cell', 'ssid', 'signalStrength', 'signalLevel',
+    FIELDS = ('address', 'ssid', 'signal_strength', 'signal_level',
             'open', 'channel', 'mode', 'connected')
 
     def __init__(self, **kwargs):
@@ -59,6 +59,8 @@ class WifiAccessPoint(object):
 
 
 class Interface(object):
+    IGNORE_SSID = ['Monobox']
+
     def __init__(self, device):
         if not device in self.available_devices():
             raise RuntimeError('Unknown interface %s' % device)
@@ -66,36 +68,37 @@ class Interface(object):
         self.device = device
 
     def scan(self):
-        current_cell = self._get_current_connection_cell()
+        current_address = self._get_current_connection_address()
 
         try:
             (data, rc) = _invoke('iwlist %s scan' % self.device)
         except RuntimeError:
             raise WifiConfigError('Wifi interface is not active')
 
-        stations = []
-        currentAp = None
+        aps = []
+        current_ap = None
         for line in data.split('\n'):
             match = re.search(r'Cell \d+ \- Address: ([\da-fA-F:]+)$', line)
             if match:
-                cell = match.group(1)
+                address = match.group(1)
 
-                currentAp = WifiAccessPoint(cell=cell)
-                stations.append(currentAp)
+                current_ap = WifiAccessPoint(address=address)
+                aps.append(current_ap)
 
-            if currentAp is None:
+            if current_ap is None:
                 continue
 
-            if cell == current_cell:
-                currentAp.connected = True
+            if address == current_address:
+                current_ap.connected = True
             else:
-                currentAp.connected = False
+                current_ap.connected = False
 
-            self._update_ap(currentAp, line)
+            self._update_ap_field(current_ap, line)
 
-        return sorted(stations, key=lambda station: station.signalStrength, reverse=True)
+        aps = [ap for ap in aps if ap.ssid not in self.IGNORE_SSID]
+        return sorted(aps, key=lambda ap: ap.signal_strength, reverse=True)
 
-    def _update_ap(self, ap, line):
+    def _update_ap_field(self, ap, line):
         match = re.search(r'ESSID:"(.+)"', line)
         if match:
             ap.ssid = match.group(1)
@@ -103,8 +106,8 @@ class Interface(object):
         match = re.search(r'Quality=(\d+)/(\d+)  Signal level=(.+) dBm', line)
         if match:
             sigStrength = int(float(match.group(1)) / float(match.group(2)) * 100)
-            ap.signalStrength = sigStrength
-            ap.signalLevel = match.group(3) + ' dBm'
+            ap.signal_strength = sigStrength
+            ap.signal_level = match.group(3) + ' dBm'
 
         match = re.search(r'Encryption key:(\w+)$', line)
         if match:
@@ -118,7 +121,7 @@ class Interface(object):
         if match:
             ap.mode = match.group(1)
 
-    def _get_current_connection_cell(self):
+    def _get_current_connection_address(self):
         (data, rc) = _invoke('iwconfig %s' % self.device)
 
         match = re.search(r'Access Point: ([\da-fA-F:]+)', data)
