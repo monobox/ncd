@@ -23,8 +23,8 @@
 
     function doRefresh() {
         $('#refresh').addClass('disabled');
-        $('#aps_ph').addClass('loading');
-        $('#aps_ph').load('/scan', onTableLoaded);
+        $('#aps_ph').addClass('loading')
+                .load('/scan', onTableLoaded);
     }
 
     function validatePsk() {
@@ -40,6 +40,7 @@
     function preparePwRequestor() {
         selectedAddress = null;
         $('#psk').val('');
+        $('#pwrequest .button').removeClass('disabled');
         $('#submit_psk').addClass('disabled')
                 .removeClass('loading');
     }
@@ -53,7 +54,7 @@
         var psk = $('#psk').val();
         console.log('Connecting to: ' + selectedAddress + ' psk: ' + psk);
         $.post('/connect', {address: selectedAddress, psk: psk}, onConnectCb);
-        $('#submit_psk').addClass('disabled');
+        $('#pwrequest .button').addClass('disabled');
         $('#submit_psk').addClass('loading');
 
         return false;
@@ -102,7 +103,7 @@
             Cancel
         </div>
         <div class="ui disabled positive right labeled icon button" id="submit_psk">
-            Proceed
+            Connect
             <i class="checkmark icon"></i>
         </div>
     </div>
