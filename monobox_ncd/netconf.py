@@ -66,6 +66,7 @@ class Interface(object):
             raise RuntimeError('Unknown interface %s' % device)
 
         self.device = device
+        self.last_scan = None
 
     def scan(self):
         current_address = self._get_current_connection_address()
@@ -96,7 +97,10 @@ class Interface(object):
             self._update_ap_field(current_ap, line)
 
         aps = [ap for ap in aps if ap.ssid not in self.IGNORE_SSID]
-        return sorted(aps, key=lambda ap: ap.signal_strength, reverse=True)
+
+        self.last_scan = sorted(aps, key=lambda ap: ap.signal_strength, reverse=True)
+
+        return self.last_scan
 
     def _update_ap_field(self, ap, line):
         match = re.search(r'ESSID:"(.+)"', line)

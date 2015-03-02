@@ -29,27 +29,31 @@ intf = netconf.Interface('wlan0')
 
 @app.route('/scan')
 def scan():
-    intf = netconf.Interface('wlan0')
     aps = intf.scan()
 
     return render_template('scan.html', aps=aps)
 
 @app.route('/connect', methods=['POST'])
 def connect():
-    print request.form
-    import time
-    time.sleep(5)
-    return 'DONE'
+    address = request.form['address']
 
-@app.route("/")
+    target_ap = None
+    for ap in intf.last_scan:
+        if ap.address == address:
+            target_ap = ap
+            break
+
+    if not target_ap:
+        return jsonify({'rc': 1, 'reason': 'Cannot find address %s' % address,
+                'ssid': '<not found>'})
+    else:
+        return jsonify({'rc': 0, 'reason': None, 'ssid': ap.ssid})
+
+@app.route('/')
 def main():
-    # intf = netconf.Interface('wlan0')
-    # aps = intf.scan()
-    # return '<html><pre>%s</pre></html>' % '<br/>'.join([cgi.escape(str(ap)) for ap in aps])
     return render_template('index.html')
 
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 

@@ -2,9 +2,6 @@
 
 {% block content %}
 <style type="text/css" media="screen">
-    #aps_ph {
-        height: 100%;
-    }
 </style>
 <script type="text/javascript" charset="utf-8">
     var selectedAddress = null;
@@ -12,17 +9,19 @@
     function onTableLoaded() {
         $('#aps_ph').removeClass('loading');
         $('.progress').progress();
-        $('#refresh').removeClass('disabled');
+        $('#refresh').removeClass('disabled')
+                .removeClass('loading');
         $('.connect').click(function() {
             preparePwRequestor();
-            $('#ssid_ph').html($(this).data('ssid'));
+            $('#pwrequest .ssid').html($(this).data('ssid'));
             selectedAddress = $(this).data('address');
             $('#pwrequest').modal('show');
         });
     }
 
     function doRefresh() {
-        $('#refresh').addClass('disabled');
+        $('#refresh').addClass('disabled')
+                .addClass('loading');
         $('#aps_ph').addClass('loading')
                 .load('/scan', onTableLoaded);
     }
@@ -46,8 +45,17 @@
     }
 
     function onConnectCb(data) {
-        console.log(data);
+        if (data['rc'] == 0) {
+            $('#msgok .ssid').html(data['ssid']);
+            $('#msgok').transition('fade down');
+        } else {
+            $('#msgnok .ssid').html(data['ssid']);
+            $('#msgnok .errcode').html(data['rc']);
+            $('#msgnok .reason').html(data['reason']);
+            $('#msgnok').transition('fade down');
+        }
         $('#pwrequest').modal('hide');
+        doRefresh();
     }
 
     function onPwRequestorApproved() {
@@ -66,6 +74,7 @@
         $('#pwrequest').modal({onApprove: onPwRequestorApproved})
                 .modal('setting', 'closable', false);
         $('#psk').on('change keypress paste textInput input', validatePsk);
+        $('.message .close').click(function() { $(this).parent().transition('fade down'); });
     });
 </script>
 
@@ -73,6 +82,24 @@
     <h3 class="ui inverted blue block header">Available wireless networks</h3>
 
     <div class="ui icon button" id="refresh"><i class="refresh icon"></i> Refresh</div>
+
+    <div id="msgok" class="ui success message hidden">
+        <i class="close icon"></i>
+        <div class="header">
+            Connection successful!
+        </div>
+        <p>Monobox is now connected to <span class="ssid"></span></p>
+    </div>
+
+    <div id="msgnok" class="ui negative message hidden">
+        <i class="close icon"></i>
+        <div class="header">
+            An error occurred while connecting
+        </div>
+        <p>Cannot connect to <span class="ssid"></span></p>
+        <p>Error code: <span class="errcode"></span></p>
+        <p>Possible reason: <span class="reason"></span></p>
+    </div>
 
     <div id="aps_ph" class="ui segment">
     </div>
@@ -85,7 +112,7 @@
         Authenticate wireless connection
     </div>
     <div class="content">
-        <h3>Connecting to <span class="ui teal horizontal label" id="ssid_ph"></span></h3>
+        <h3>Connecting to <span class="ssid"></span></h3>
 
         <div class="description">
             <div class="ui header">A password is required for this connection</div>
