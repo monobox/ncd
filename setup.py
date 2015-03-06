@@ -30,12 +30,13 @@ setup(
     packages=[
         'monobox-ncd',
     ],
-    package_dir={'monobox-ncd':
-                 'monobox-ncd'},
+    package_dir={'monobox-ncd': 'monobox_ncd'},
     include_package_data=True,
     install_requires=requirements,
     license='GPL',
     zip_safe=False,
     keywords='monobox-ncd',
+    entry_points={
+            'console_scripts': ['monobox-ncd = monobox_ncd.runner:run'],
+    }
 )
-
