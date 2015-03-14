@@ -18,8 +18,16 @@
 # Copyright (c) 2015 by OXullo Intersecans / bRAiNRAPERS
 
 import server
+import zeroconf
 
 DEBUG = True
+PORT = 5000
 
 def run():
-    server.app.run(debug=DEBUG, host='0.0.0.0')
+    zcs = zeroconf.ZeroConf('Monobox Configuration Panel', PORT)
+    zcs.publish()
+
+    try:
+        server.app.run(debug=DEBUG, host='0.0.0.0', port=PORT)
+    except KeyboardInterrupt:
+        zcs.unpublish()
