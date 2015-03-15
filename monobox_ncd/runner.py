@@ -17,13 +17,20 @@
 #
 # Copyright (c) 2015 by OXullo Intersecans / bRAiNRAPERS
 
+import logging
+
 import server
 import zeroconf
 
 DEBUG = True
 PORT = 5000
 
+logger = logging.getLogger(__name__)
+
 def run():
+    logging.basicConfig(level=logging.INFO)
+
+    logger.info('Monobox NCD starting up')
     zcs = zeroconf.ZeroConf('Monobox Configuration Panel', PORT)
     zcs.publish()
 
@@ -31,3 +38,4 @@ def run():
         server.app.run(debug=DEBUG, host='0.0.0.0', port=PORT)
     except KeyboardInterrupt:
         zcs.unpublish()
+        logger.info('Monobox NCD shutting down')

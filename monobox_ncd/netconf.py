@@ -20,7 +20,34 @@
 import os
 import re
 import subprocess
+import shutil
 import shlex
+import logging
+import pbkdf2
+import jinja2
+
+logger = logging.getLogger(__name__)
+
+
+def connect(ssid, psk):
+    bpsk = pbkdf2.PBKDF2(psk, ssid, 4096).hexread(32)
+
+    print 'loadpath:', os.path.dirname(__file__)
+    loader = jinja2.FileSystemLoader(
+            searchpath=os.path.join(os.path.dirname(__file__), 'templates'))
+    env = jinja2.Environment(loader=loader)
+    template = env.get_template('interfaces.template')
+    contents = template.render({'ssid': ssid, 'psk': bpsk})
+
+    _invoke('ifdown wlan0')
+
+    shutil.move('/etc/network/interfaces', '/etc/network/interfaces.bak')
+    open('/etc/network/interfaces', 'w').write(contents)
+
+    out, returncode = _invoke('ifup wlan0')
+
+    if returncode != 0:
+        raise RuntimeError('Cannot connect: %s' % out)
 
 def _invoke(command):
     proc = subprocess.Popen(shlex.split(command),
@@ -33,7 +60,7 @@ def _invoke(command):
         for line in err.split('\n'):
             line = line.strip()
             if line:
-                logging.error('%s: %s' % (command, line))
+                logger.error('%s: %s' % (command, line))
 
     if proc.returncode != 0:
         raise RuntimeError('Command %s failed with rc %d' % (command, proc.returncode))
@@ -70,6 +97,12 @@ class Interface(object):
 
     def scan(self):
         current_address = self._get_current_connection_address()
+
+        intf_flags = int(open('/sys/class/net/%s/flags' % self.device).read().strip(), 16)
+
+        # 1 << 0 : IFF_UP (linux include/uapi/linux/if.h)
+        if not intf_flags & 1:
+            _invoke('ip link set %s up' % self.device)
 
         try:
             (data, rc) = _invoke('iwlist %s scan' % self.device)

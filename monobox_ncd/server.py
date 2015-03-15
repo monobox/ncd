@@ -36,6 +36,12 @@ def scan():
 @app.route('/connect', methods=['POST'])
 def connect():
     address = request.form['address']
+    psk = request.form.get('psk', None)
+
+    if intf.last_scan is None:
+        return jsonify({'rc': 2,
+                'reason': 'Access points cache missing, please try again',
+                'ssid': '[SSID not found]'})
 
     target_ap = None
     for ap in intf.last_scan:
@@ -44,10 +50,17 @@ def connect():
             break
 
     if not target_ap:
-        return jsonify({'rc': 1, 'reason': 'Cannot find address %s' % address,
-                'ssid': '<not found>'})
+        return jsonify({'rc': 2, 'reason': 'Cannot find address %s' % address,
+                'ssid': '[SSID not found]'})
+    elif psk is None:
+        return jsonify({'rc': 3, 'reason': 'Empty PSK', 'ssid': target_ap.ssid})
     else:
-        return jsonify({'rc': 0, 'reason': None, 'ssid': ap.ssid})
+        try:
+            netconf.connect(target_ap.ssid, psk)
+        except Exception, e:
+            return jsonify({'rc': 4, 'reason': str(e), 'ssid': target_ap.ssid})
+        else:
+            return jsonify({'rc': 0, 'reason': None, 'ssid': target_ap.ssid})
 
 @app.route('/')
 def main():
