@@ -22,7 +22,7 @@ import logging
 import server
 import zeroconf
 
-DEBUG = True
+DEBUG = False
 PORT = 5000
 
 logger = logging.getLogger(__name__)
