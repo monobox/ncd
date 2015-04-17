@@ -17,10 +17,14 @@
 #
 # Copyright (c) 2015 by OXullo Intersecans / bRAiNRAPERS
 
-import cgi
+import subprocess
+import shlex
 from flask import Flask, render_template, jsonify, request
 
 import netconf
+
+UPGRADE_COMMAND='/srv/monobox/_venv/bin/pip install -e git+https://github.com/monobox/player@deploy/beta05#egg=monobox-player'
+POST_UPGRADE_COMMAND='supervisorctl restart monobox-player'
 
 app = Flask(__name__)
 
@@ -61,6 +65,27 @@ def connect():
             return jsonify({'rc': 4, 'reason': str(e), 'ssid': target_ap.ssid})
         else:
             return jsonify({'rc': 0, 'reason': None, 'ssid': target_ap.ssid})
+
+@app.route('/upgrade', methods=['POST'])
+def upgrade():
+    args = shlex.split(UPGRADE_COMMAND)
+    result = 'Running upgrade:\n\n'
+    try:
+        result += subprocess.check_output(args, stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError, e:
+        result += 'Cannot execute upgrade command: %s' % str(e)
+        return jsonify({'result': result})
+
+    args = shlex.split(POST_UPGRADE_COMMAND)
+    result += '\nRunning post-upgrade command:\n\n'
+    try:
+        result += subprocess.check_output(args, stderr=subprocess.STDOUT, shell=True)
+    except subprocess.CalledProcessError, e:
+        result += 'Cannot execute post-upgrade command: %s' % str(e)
+        return jsonify({'result': result})
+
+    return jsonify({'result': result})
+
 
 @app.route('/')
 def main():

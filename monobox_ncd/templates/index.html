@@ -26,6 +26,18 @@
                 .load('/scan', onTableLoaded);
     }
 
+    function doUpgrade() {
+        $('#upgrademodal').modal('show');
+        $('#upgradeoutput').val('Invoking upgrader\n');
+        $.post('/upgrade', onUpgradeCb);
+        $('#upgradeloader').addClass('active');
+    }
+
+    function onUpgradeCb(data) {
+        $('#upgradeoutput').val(data['result']);
+        $('#upgradeloader').removeClass('active');
+    }
+
     function validatePsk() {
         if ($('#psk').val().length < 8) {
             $('#submit_psk').addClass('disabled');
@@ -70,9 +82,11 @@
 
     $( document ).ready(function() {
         $('#refresh').click(doRefresh);
+        $('#upgrade').click(doUpgrade);
         doRefresh();
         $('#pwrequest').modal({onApprove: onPwRequestorApproved})
                 .modal('setting', 'closable', false);
+        $('#upgrademodal').modal();
         $('#psk').on('change keypress paste textInput input', validatePsk);
         $('.message .close').click(function() { $(this).parent().transition('fade down'); });
     });
@@ -82,6 +96,7 @@
     <h3 class="ui inverted blue block header">Available wireless networks</h3>
 
     <div class="ui icon button" id="refresh"><i class="refresh icon"></i> Refresh</div>
+    <div class="ui icon button" id="upgrade"><i class="download icon"></i> Upgrade software</div>
 
     <div id="msgok" class="ui success message hidden">
         <i class="close icon"></i>
@@ -135,4 +150,19 @@
         </div>
     </div>
 </div>
+
+<!-- Modal upgrade panel -->
+<div class="ui modal" id="upgrademodal">
+    <i class="close icon"></i>
+    <div class="header">
+        Software upgrade
+    </div>
+    <div class="content">
+        <div class="ui segment">
+            <div class="ui inverted dimmer" id="upgradeloader"><div class="ui loader"></div></div>
+            <textarea rows="40" cols="90" id="upgradeoutput" readonly></textarea>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
