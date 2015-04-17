@@ -71,7 +71,7 @@ def upgrade():
     args = shlex.split(UPGRADE_COMMAND)
     result = 'Running upgrade:\n\n'
     try:
-        result += subprocess.check_output(args, stderr=subprocess.STDOUT, shell=True)
+        result += subprocess.check_output(args, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError, e:
         result += 'Cannot execute upgrade command: %s' % str(e)
         return jsonify({'result': result})
@@ -79,7 +79,7 @@ def upgrade():
     args = shlex.split(POST_UPGRADE_COMMAND)
     result += '\nRunning post-upgrade command:\n\n'
     try:
-        result += subprocess.check_output(args, stderr=subprocess.STDOUT, shell=True)
+        result += subprocess.check_output(args, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError, e:
         result += 'Cannot execute post-upgrade command: %s' % str(e)
         return jsonify({'result': result})
